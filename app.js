@@ -214,7 +214,7 @@ function renderBalancesAndSettlements() {
     settlements.forEach((s) => {
       const li = document.createElement('li');
       li.style.padding = '6px 0';
-      li.innerHTML = `💸 <strong>${escapeHtml(nameOf(s.from))}</strong> → <strong>${escapeHtml(nameOf(s.to))}</strong> : <strong>₩ ${money(s.amount)}</strong>`;
+      li.innerHTML = `<svg class="icon" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a1 1 0 11-2 0 1 1 0 012 0z" /></svg> <strong>${escapeHtml(nameOf(s.from))}</strong> → <strong>${escapeHtml(nameOf(s.to))}</strong> : <strong>₩ ${money(s.amount)}</strong>`;
       ul.appendChild(li);
     });
     setDiv.appendChild(ul);
@@ -504,105 +504,5 @@ function renderAll() {
   renderBalancesAndSettlements();
 }
 
-// ======= Dev Tests (non-intrusive) =======
-function assert(cond, msg) {
-  if (!cond) throw new Error(msg);
-}
-function sameSettlements(a, b) {
-  const key = (s) => `${s.from}->${s.to}:${Math.round(s.amount)}`;
-  const A = a.map((s) => ({ from: s.from, to: s.to, amount: Math.round(s.amount) })).sort((x, y) => key(x).localeCompare(key(y)));
-  const B = b.map((s) => ({ from: s.from, to: s.to, amount: Math.round(s.amount) })).sort((x, y) => key(x).localeCompare(key(y)));
-  return JSON.stringify(A) === JSON.stringify(B);
-}
-function runTests() {
-  const log = [];
-  {
-    const P = [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-    ];
-    const E = [{ id: 'e1', title: 'meal', amount: 100, payerId: 'A', beneficiaries: ['A', 'B'], splitMode: 'equal' }];
-    const { balances, settlements } = compute(P, E);
-    assert(balances.A.paid === 100 && Math.round(balances.A.owed) === 50 && balances.A.net === 50, 'T1 balance A');
-    assert(Math.round(balances.B.owed) === 50 && balances.B.net === -50, 'T1 balance B');
-    assert(sameSettlements(settlements, [{ from: 'B', to: 'A', amount: 50 }]), 'T1 settlements');
-    log.push('T1 ok');
-  }
-  {
-    const P = [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-    ];
-    const E = [
-      {
-        id: 'e1',
-        title: 'meal',
-        amount: 50000,
-        payerId: 'A',
-        beneficiaries: ['A', 'B'],
-        splitMode: 'custom',
-        shares: { A: 20000, B: 30000 },
-      },
-    ];
-    const { balances, settlements } = compute(P, E);
-    assert(balances.A.net === 30000, 'T2 A net 30000');
-    assert(balances.B.net === -30000, 'T2 B net -30000');
-    assert(sameSettlements(settlements, [{ from: 'B', to: 'A', amount: 30000 }]), 'T2 settlements');
-    log.push('T2 ok');
-  }
-  {
-    const P = [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-      { id: 'C', name: 'C' },
-    ];
-    const E = [
-      { id: 'e1', title: 'taxi', amount: 30000, payerId: 'B', beneficiaries: ['A', 'B', 'C'], splitMode: 'equal' },
-      { id: 'e2', title: 'dessert', amount: 12000, payerId: 'C', beneficiaries: ['A', 'C'], splitMode: 'custom', shares: { A: 2000, C: 10000 } },
-    ];
-    const { balances, settlements } = compute(P, E);
-    assert(balances.A.net === -12000, 'T3 A net');
-    assert(balances.B.net === 20000, 'T3 B net');
-    assert(balances.C.net === -8000, 'T3 C net');
-    assert(
-      sameSettlements(settlements, [
-        { from: 'A', to: 'B', amount: 12000 },
-        { from: 'C', to: 'B', amount: 8000 },
-      ]),
-      'T3 settlements'
-    );
-    log.push('T3 ok');
-  }
-  {
-    const P = [{ id: 'A', name: 'A' }];
-    const E = [{ id: 'e1', title: 'ghost', amount: 1000, payerId: 'A', beneficiaries: ['A', 'X'], splitMode: 'equal' }];
-    const { balances, settlements } = compute(P, E);
-    assert(Math.round(balances.A.owed) === 500 && balances.A.net === 500, 'T4 robustness A');
-    assert(settlements.length === 0, 'T4 no settlements');
-    log.push('T4 ok');
-  }
-  {
-    const P = [
-      { id: 'A', name: 'A' },
-      { id: 'B', name: 'B' },
-    ];
-    const E = [
-      { id: 'e1', title: 'partial', amount: 3000, payerId: 'B', beneficiaries: ['A', 'B'], splitMode: 'custom', shares: { A: 1000 } },
-    ];
-    const { balances, settlements } = compute(P, E);
-    assert(balances.A.net === -1000, 'T5 A net');
-    assert(balances.B.net === 3000, 'T5 B net');
-    assert(sameSettlements(settlements, [{ from: 'A', to: 'B', amount: 1000 }]), 'T5 settlements');
-    log.push('T5 ok');
-  }
-  document.getElementById('testLog').textContent = '✅ 모든 테스트 통과' + log.join('');
-}
-
-// Initial render & tests
+// Initial render
 renderAll();
-try {
-  runTests();
-} catch (err) {
-  document.getElementById('testLog').textContent = '❌ 테스트 실패: ' + err.message;
-  console.error(err);
-}

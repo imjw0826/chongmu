@@ -1,11 +1,13 @@
 <!doctype html>
 <html lang="ko">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>여행 정산 | Trip Splitter</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <header>
     <div class="wrap title">
@@ -21,23 +23,13 @@
 
   <main class="wrap">
     <div class="grid">
-      <section class="card" aria-labelledby="peopleTitle">
-        <h2 id="peopleTitle">👥 참가자</h2>
+      <section class="card">
         <div class="row">
-          <div>
-            <label for="participantName">이름</label>
-            <input id="participantName" type="text" placeholder="예: 지민" />
-          </div>
-          <div style="flex:0 0 auto">
-            <label>&nbsp;</label>
-            <button id="addParticipantBtn" class="btn">추가</button>
-          </div>
+          <h2 style="margin:0"><svg class="icon" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg> 지출 추가</h2>
         </div>
-        <div id="participantsList" class="chips" style="margin-top:10px"></div>
-        <div class="footer-note">Tip: 참가자를 먼저 추가한 뒤, 지출 항목을 입력하세요.</div>
-
-        <div class="separator"></div>
-        <h2>🧾 지출 추가</h2>
         <div class="row">
           <div>
             <label for="expTitle">항목명</label>
@@ -48,7 +40,7 @@
             <input id="expAmount" type="number" inputmode="decimal" min="0" step="1" placeholder="예: 54000" />
           </div>
         </div>
-        <div class="row">
+        <div class="row align-start">
           <div>
             <label for="expPayer">결제자</label>
             <select id="expPayer"></select>
@@ -77,21 +69,43 @@
       </section>
 
       <section class="card" aria-labelledby="resultTitle">
-        <h2 id="resultTitle">📊 정산 결과</h2>
+        <h2 id="resultTitle"><svg class="icon" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+          </svg> 참가자 & 정산 결과</h2>
+
+        <!-- Moved Participants Section -->
+        <div class="row">
+          <div>
+            <label for="participantName">이름</label>
+            <input id="participantName" type="text" placeholder="예: 지민" />
+          </div>
+          <div style="flex:0 0 auto">
+            <label>&nbsp;</label>
+            <button id="addParticipantBtn" class="btn">추가</button>
+          </div>
+        </div>
+        <div id="participantsList" class="chips" style="margin-top:10px"></div>
+        <div class="footer-note">Tip: 참가자를 먼저 추가한 뒤, 지출 항목을 입력하세요.</div>
+        <div class="separator"></div>
+
         <div id="balances"></div>
         <div class="separator"></div>
         <div id="settlements"></div>
         <div class="separator"></div>
         <div class="row">
           <button id="exportBtn" class="btn">데이터 내보내기 (JSON)</button>
-          <label class="btn" for="importFile" style="cursor:pointer">불러오기<input id="importFile" type="file" accept="application/json" style="display:none"/></label>
+          <label class="btn" for="importFile" style="cursor:pointer">불러오기<input id="importFile" type="file"
+              accept="application/json" style="display:none" /></label>
         </div>
         <div class="footer-note">모든 계산은 원(₩) 단위로 반올림합니다. 실제 송금 전 금액을 서로 확인하세요.</div>
       </section>
     </div>
 
     <section class="card" style="margin-top:16px">
-      <h2>📚 지출 목록</h2>
+      <h2><svg class="icon" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+        </svg> 지출 목록</h2>
       <div class="footer-note" id="expensesHint">아직 지출이 없습니다. 위 폼에서 항목을 추가하세요.</div>
       <div style="overflow:auto">
         <table id="expensesTable" style="min-width:740px; display:none">
@@ -110,13 +124,9 @@
       </div>
     </section>
 
-    <details id="testPanel" class="card">
-      <summary>🧪 개발용 테스트 (열어서 결과 확인)</summary>
-      <div id="testLog">테스트 실행 전…</div>
-    </details>
-
   </main>
 
   <script src="app.js"></script>
 </body>
+
 </html>

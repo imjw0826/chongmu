@@ -114,7 +114,11 @@ main {
   flex-wrap: wrap;
 }
 
-.row > * {
+.row.align-start {
+  align-items: flex-start;
+}
+
+.row>* {
   flex: 1;
 }
 
@@ -310,18 +314,11 @@ th {
   margin-top: 6px;
 }
 
-details#testPanel {
-  margin-top: 16px;
-}
-
-details#testPanel summary {
-  cursor: pointer;
-}
-
-#testLog {
-  white-space: pre-wrap;
-  background: var(--muted);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px;
+.icon {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+  stroke-width: 2;
+  fill: none;
+  vertical-align: middle;
 }
