@@ -159,9 +159,17 @@ function renderExpenses() {
   state.expenses.forEach((exp) => {
     const tr = document.createElement('tr');
     const perHead = exp.splitMode === 'custom' ? null : exp.beneficiaries.length ? Math.round(exp.amount / exp.beneficiaries.length) : 0;
+
+    // Currency display helper
+    const currencySymbols = { KRW: '₩', USD: '$', JPY: '¥', EUR: '€', CNY: '¥', GBP: '£' };
+    const symbol = currencySymbols[exp.currency] || '₩';
+    const amountDisplay = exp.currency && exp.currency !== 'KRW'
+      ? `${symbol} ${money(exp.originalAmount)} <span class="muted small">(₩${money(exp.amount)})</span>`
+      : `₩ ${money(exp.amount)}`;
+
     tr.innerHTML = `
       <td>${escapeHtml(exp.title || '')}</td>
-      <td class="right">₩ ${money(exp.amount)}</td>
+      <td class="right">${amountDisplay}</td>
       <td>${escapeHtml(nameOf(exp.payerId))}</td>
       <td>${exp.beneficiaries.map((id) => `<span class="tag">${escapeHtml(nameOf(id))}</span>`).join(' ')}</td>
       <td class="right">${exp.beneficiaries.length ? (exp.splitMode === 'custom' ? '개별' : `₩ ${money(perHead)}`) : '—'}</td>
@@ -331,7 +339,10 @@ document.getElementById('expAmount').addEventListener('input', updateCustomSumNo
 
 document.getElementById('addExpenseBtn').addEventListener('click', () => {
   const title = document.getElementById('expTitle').value.trim();
-  const amount = Math.round(Number(document.getElementById('expAmount').value || 0));
+  const rawAmount = Math.round(Number(document.getElementById('expAmount').value || 0));
+  const currency = document.getElementById('expCurrency').value;
+  const exchangeRate = currency === 'KRW' ? 1 : Number(document.getElementById('expExchangeRate').value || 1);
+  const amount = Math.round(rawAmount * exchangeRate); // 원화로 변환
   const payerId = document.getElementById('expPayer').value;
   const beneficiaries = Array.from(document.querySelectorAll('#beneficiariesBox input:checked')).map((cb) => cb.value);
 
@@ -387,7 +398,7 @@ document.getElementById('addExpenseBtn').addEventListener('click', () => {
     document.getElementById('cancelEditBtn').style.display = 'none';
   } else {
     const splitMode = document.getElementById('splitCustom').checked ? 'custom' : 'equal';
-    const expense = { id: uuid(), title, amount, payerId, beneficiaries, splitMode };
+    const expense = { id: uuid(), title, amount, payerId, beneficiaries, splitMode, originalAmount: rawAmount, currency, exchangeRate };
     if (splitMode === 'custom') {
       const shares = {};
       let sum = 0;
@@ -407,6 +418,9 @@ document.getElementById('addExpenseBtn').addEventListener('click', () => {
 
   document.getElementById('expTitle').value = '';
   document.getElementById('expAmount').value = '';
+  document.getElementById('expCurrency').value = 'KRW';
+  document.getElementById('exchangeRateRow').style.display = 'none';
+  document.getElementById('expExchangeRate').value = '';
   saveState();
   renderAll();
 });
@@ -457,36 +471,6 @@ document.getElementById('expensesTable').addEventListener('click', (e) => {
     document.getElementById('addExpenseBtn').textContent = '변경 저장';
     document.getElementById('cancelEditBtn').style.display = '';
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-});
-
-document.getElementById('exportBtn').addEventListener('click', () => {
-  const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  const now = new Date();
-  const ymd = now.toISOString().slice(0, 10);
-  a.href = url;
-  a.download = `trip-splitter-${ymd}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-});
-
-document.getElementById('importFile').addEventListener('change', async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  try {
-    const text = await file.text();
-    const data = JSON.parse(text);
-    if (!Array.isArray(data.participants) || !Array.isArray(data.expenses)) throw new Error('잘못된 파일 형식');
-    state.participants = data.participants;
-    state.expenses = data.expenses;
-    saveState();
-    renderAll();
-  } catch (err) {
-    alert('불러오기에 실패했습니다: ' + err.message);
-  } finally {
-    e.target.value = '';
   }
 });
 

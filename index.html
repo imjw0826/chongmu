@@ -22,6 +22,61 @@
   </header>
 
   <main class="wrap">
+    <!-- Auth Section -->
+    <section class="card" id="authSection" style="margin-bottom:16px">
+      <h2><svg class="icon" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg> 로그인</h2>
+
+      <!-- Login Form -->
+      <div id="loginForm">
+        <div class="row">
+          <div>
+            <label for="authEmail">이메일</label>
+            <input id="authEmail" type="email" placeholder="example@email.com" />
+          </div>
+          <div>
+            <label for="authPassword">비밀번호</label>
+            <input id="authPassword" type="password" placeholder="비밀번호" />
+          </div>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button id="signInBtn" class="btn primary">로그인</button>
+          <button id="signUpBtn" class="btn">회원가입</button>
+        </div>
+        <div class="footer-note">로그인하면 여러 기기에서 정산 데이터를 공유할 수 있습니다.</div>
+      </div>
+
+      <!-- User Info (shown when logged in) -->
+      <div id="userInfo" style="display:none">
+        <div class="row">
+          <span>로그인됨: <strong id="userEmail"></strong></span>
+          <div style="flex:1"></div>
+          <button id="signOutBtn" class="btn small">로그아웃</button>
+        </div>
+      </div>
+
+      <!-- Session Section (shown when logged in) -->
+      <div id="sessionSection" style="display:none; margin-top:12px">
+        <div class="separator"></div>
+        <div class="row">
+          <div style="flex:2">
+            <label for="sessionCode">세션 코드</label>
+            <input id="sessionCode" type="text" placeholder="예: 제주도여행2024" />
+          </div>
+          <div style="flex:0 0 auto">
+            <label>&nbsp;</label>
+            <button id="joinSessionBtn" class="btn primary">세션 참가</button>
+          </div>
+        </div>
+        <div class="footer-note">같은 세션 코드를 공유하면 여러 사람이 동시에 정산을 편집할 수 있습니다.</div>
+        <div id="sessionStatus" style="display:none; margin-top:8px">
+          <span class="tag">현재 세션: <strong id="currentSession"></strong></span>
+        </div>
+      </div>
+    </section>
+
     <div class="grid">
       <section class="card">
         <div class="row">
@@ -36,8 +91,26 @@
             <input id="expTitle" type="text" placeholder="예: 점심 / 택시 / 입장료" />
           </div>
           <div>
-            <label for="expAmount">금액 (원)</label>
-            <input id="expAmount" type="number" inputmode="decimal" min="0" step="1" placeholder="예: 54000" />
+            <label for="expAmount">금액</label>
+            <div class="row" style="gap:4px">
+              <input id="expAmount" type="number" inputmode="decimal" min="0" step="1" placeholder="예: 100"
+                style="flex:2" />
+              <select id="expCurrency" style="flex:1">
+                <option value="KRW">₩ 원</option>
+                <option value="USD">$ 달러</option>
+                <option value="JPY">¥ 엔</option>
+                <option value="EUR">€ 유로</option>
+                <option value="CNY">¥ 위안</option>
+                <option value="GBP">£ 파운드</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="exchangeRateRow" class="row" style="display:none">
+          <div style="flex:1"></div>
+          <div>
+            <label for="expExchangeRate">환율 (1 외화 = ? 원)</label>
+            <input id="expExchangeRate" type="number" inputmode="decimal" min="0" step="0.01" placeholder="예: 1350" />
           </div>
         </div>
         <div class="row align-start">
@@ -65,7 +138,7 @@
           <button id="addExpenseBtn" class="btn primary">지출 추가</button>
           <button id="cancelEditBtn" class="btn" style="display:none">편집 취소</button>
         </div>
-        <div class="footer-note">동일 항목을 여러 명이 나눠 썼다면 ‘참여자’에서 해당 인원만 선택하세요. 인원수로 균등 분배됩니다.</div>
+        <div class="footer-note">동일 항목을 여러 명이 나눠 썼다면 '참여자'에서 해당 인원만 선택하세요. 인원수로 균등 분배됩니다.</div>
       </section>
 
       <section class="card" aria-labelledby="resultTitle">
@@ -93,11 +166,6 @@
         <div class="separator"></div>
         <div id="settlements"></div>
         <div class="separator"></div>
-        <div class="row">
-          <button id="exportBtn" class="btn">데이터 내보내기 (JSON)</button>
-          <label class="btn" for="importFile" style="cursor:pointer">불러오기<input id="importFile" type="file"
-              accept="application/json" style="display:none" /></label>
-        </div>
         <div class="footer-note">모든 계산은 원(₩) 단위로 반올림합니다. 실제 송금 전 금액을 서로 확인하세요.</div>
       </section>
     </div>
@@ -126,7 +194,170 @@
 
   </main>
 
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+  <!-- App Scripts -->
   <script src="app.js"></script>
+  <script src="firebase-config.js"></script>
+
+  <!-- Auth Event Listeners -->
+  <script>
+    // Sign In
+    document.getElementById('signInBtn').addEventListener('click', () => {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      if (!email || !password) {
+        alert('이메일과 비밀번호를 입력하세요.');
+        return;
+      }
+      signIn(email, password);
+    });
+
+    // Sign Up
+    document.getElementById('signUpBtn').addEventListener('click', () => {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPassword').value;
+      if (!email || !password) {
+        alert('이메일과 비밀번호를 입력하세요.');
+        return;
+      }
+      if (password.length < 6) {
+        alert('비밀번호는 6자 이상이어야 합니다.');
+        return;
+      }
+      signUp(email, password);
+    });
+
+    // Sign Out
+    document.getElementById('signOutBtn').addEventListener('click', () => {
+      signOut();
+    });
+
+    // Join Session
+    document.getElementById('joinSessionBtn').addEventListener('click', () => {
+      const sessionCode = document.getElementById('sessionCode').value.trim();
+      joinSession(sessionCode);
+    });
+
+    // Currency change handler
+    async function fetchExchangeRate(currency) {
+      if (currency === 'KRW') return 1;
+      try {
+        // Free API: exchangerate-api.com (no key required for basic use)
+        const res = await fetch(`https://api.exchangerate-api.com/v4/latest/${currency}`);
+        const data = await res.json();
+        if (data && data.rates && data.rates.KRW) {
+          return Math.round(data.rates.KRW * 100) / 100;
+        }
+      } catch (e) {
+        console.warn('Exchange rate API failed:', e);
+      }
+      return 0; // 실패 시 0 반환
+    }
+
+    document.getElementById('expCurrency').addEventListener('change', async (e) => {
+      const currency = e.target.value;
+      const rateRow = document.getElementById('exchangeRateRow');
+      const rateInput = document.getElementById('expExchangeRate');
+
+      if (currency === 'KRW') {
+        rateRow.style.display = 'none';
+        rateInput.value = '';
+      } else {
+        rateRow.style.display = 'flex';
+        rateInput.placeholder = '로딩중...';
+        const rate = await fetchExchangeRate(currency);
+        rateInput.value = rate;
+        rateInput.placeholder = '예: ' + rate;
+      }
+    });
+  </script>
+
+  <footer style="text-align:center; padding:24px 16px; color:#5a6a82; font-size:12px;">
+    <p>Made by <a href="https://github.com/imjw0826" target="_blank" style="color:#2563eb;">imjw0826</a></p>
+    <button id="contactBtn" class="btn small" style="margin-top:8px;">개발자에게 문의하기</button>
+  </footer>
+
+  <!-- Contact Modal -->
+  <div id="contactModal"
+    style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.5); z-index:100; align-items:center; justify-content:center;">
+    <div class="card" style="width:90%; max-width:400px; margin:auto;">
+      <h2 style="margin-top:0;">개발자에게 문의</h2>
+      <form id="contactForm" action="" method="POST">
+        <input type="hidden" name="_subject" value="[Trip Splitter] 문의" />
+        <input type="hidden" name="_captcha" value="false" />
+        <div style="margin-bottom:12px;">
+          <label for="contactEmail">회신받을 이메일</label>
+          <input type="email" name="email" id="contactEmail" required placeholder="your@email.com" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <label for="contactMessage">문의 내용</label>
+          <textarea name="message" id="contactMessage" required rows="5"
+            style="width:100%; padding:10px; border-radius:10px; border:1px solid var(--line); background:var(--muted); resize:vertical;"
+            placeholder="문의 내용을 입력하세요..."></textarea>
+        </div>
+        <div class="row" style="justify-content:flex-end; gap:8px;">
+          <button type="button" id="closeModalBtn" class="btn">취소</button>
+          <button type="submit" class="btn primary">보내기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Contact modal logic
+    const modal = document.getElementById('contactModal');
+    const form = document.getElementById('contactForm');
+
+    // Build form action dynamically to hide email
+    const p1 = 'imjungwon2005';
+    const p2 = 'gmail.com';
+    const formEndpoint = 'https://formsubmit.co/ajax/' + p1 + '@' + p2;
+
+    document.getElementById('contactBtn').addEventListener('click', () => {
+      modal.style.display = 'flex';
+    });
+
+    document.getElementById('closeModalBtn').addEventListener('click', () => {
+      modal.style.display = 'none';
+    });
+
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        modal.style.display = 'none';
+      }
+    });
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault(); // 페이지 이동 방지
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch(formEndpoint, {
+          method: 'POST',
+          body: formData,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (response.ok) {
+          alert('문의가 전송되었습니다. 감사합니다!');
+          form.reset();
+          modal.style.display = 'none';
+        } else {
+          alert('전송에 실패했습니다. 다시 시도해 주세요.');
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('전송 중 오류가 발생했습니다.');
+      }
+    });
+  </script>
 </body>
 
 </html>

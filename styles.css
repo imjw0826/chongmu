@@ -16,15 +16,19 @@
   box-sizing: border-box;
 }
 
-html,
-body {
+html {
   height: 100%;
+}
+
+body {
+  min-height: 100%;
 }
 
 body {
   margin: 0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Apple SD Gothic Neo, Noto Sans KR, "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji";
-  background: radial-gradient(circle at 20% 20%, #e8f0ff 0%, transparent 28%), linear-gradient(180deg, #edf2fb, #f7f9fc 42%);
+  background: linear-gradient(180deg, #edf2fb 0%, #f7f9fc 100%);
+  background-attachment: fixed;
   color: var(--text);
 }
 
