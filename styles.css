@@ -58,24 +58,10 @@ header {
   gap: 12px;
 }
 
-.logo {
-  width: 40px;
-  height: 40px;
-  border-radius: 7px;
-  background: #262626;
-  box-shadow: 0 1px 3px #00000015;
-}
-
 h1 {
   font-size: 20px;
   margin: 0;
   letter-spacing: 0.3px;
-}
-
-.sub {
-  color: var(--sub);
-  font-size: 12px;
-  margin-top: 4px;
 }
 
 main {
@@ -330,8 +316,6 @@ th {
 }
 /* Surface styling only: preserve the original section order and responsive grid. */
 button, input, select, textarea { font-family: inherit; font-size: 13px; }
-.logo { position: relative; border-radius: 9px; }
-.logo::before { content: ""; position: absolute; width: 7px; height: 7px; top: 11px; left: 11px; background: #fff; border-radius: 2px; box-shadow: 11px 0 #fff, 0 11px #fff, 11px 11px #d4b895; }
 h1 { font-weight: 600; letter-spacing: -0.5px; }
 .card h2 { font-weight: 600; letter-spacing: -0.25px; }
 .icon { stroke-width: 1.6; }
@@ -355,14 +339,32 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 footer { color: var(--sub) !important; }
 footer a { color: var(--text) !important; }
 @media (prefers-reduced-motion: reduce) { .btn { transition: none; } }
-.logo { flex-shrink: 0; }
 .btn { white-space: nowrap; }
 .btn.small { padding: 6px 9px; }
-.title > div:nth-child(2) { min-width: 0; }
+.title > div:first-child { min-width: 0; }
 @media (max-width: 600px) {
   header { padding: 18px 16px; }
   h1 { font-size: 16px; }
-  .sub { font-size: 11px; }
   #resetBtn { padding: 8px 10px; }
   .btn.small { font-size: 11px; padding: 6px 7px; }
+}
+
+/* Keep account controls together, with a clear primary login action. */
+#authSection { padding: 20px; }
+#authSection h2 { margin-bottom: 16px; }
+.auth-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto; gap: 16px; align-items: end; }
+.auth-field { min-width: 0; }
+.auth-field label { margin-bottom: 7px; }
+.auth-field input { height: 42px; background: #fafafa; }
+.auth-actions { display: flex; gap: 8px; }
+.auth-actions .btn { min-height: 42px; padding: 10px 22px; }
+.password-field { position: relative; }
+.password-field input { padding-right: 64px; }
+#togglePassword { position: absolute; right: 6px; top: 5px; height: 32px; padding: 0 8px; border: 0; border-radius: 4px; background: transparent; color: #777; font-size: 12px; cursor: pointer; }
+#togglePassword:hover { background: #ededed; color: #333; }
+#userEmail { overflow-wrap: anywhere; }
+@media (max-width: 760px) {
+  .auth-fields { grid-template-columns: 1fr; gap: 14px; }
+  .auth-actions { margin-top: 2px; }
+  .auth-actions .btn { flex: 1; }
 }
