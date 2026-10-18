@@ -149,7 +149,7 @@ function renderExpenses() {
   tbody.innerHTML = '';
 
   if (state.expenses.length === 0) {
-    table.style.display = 'none';
+    table.style.display = '';
     hint.style.display = 'block';
   } else {
     table.style.display = '';
@@ -190,7 +190,7 @@ function renderBalancesAndSettlements() {
   const balDiv = document.getElementById('balances');
   balDiv.innerHTML = '';
   if (state.participants.length === 0) {
-    balDiv.innerHTML = '<div class="muted">참가자를 추가하세요.</div>';
+    balDiv.innerHTML = '<div class="participant-empty"><svg class="icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M16 3a4 4 0 010 8M22 21v-2a4 4 0 00-3-3.87M13 7a4 4 0 11-8 0 4 4 0 018 0"/></svg><strong>첫 번째 참가자를 추가해 주세요.</strong><span>참가자를 추가하면 지출을 기록하고<br>정산 결과를 확인할 수 있습니다.</span></div>';
   } else {
     const table = document.createElement('table');
     table.innerHTML = `
@@ -486,6 +486,11 @@ function renderAll() {
   renderParticipants();
   renderExpenses();
   renderBalancesAndSettlements();
+  document.getElementById('totalExpense').textContent = `₩ ${money(state.expenses.reduce((sum, exp) => sum + Number(exp.amount || 0), 0))}`;
+  document.getElementById('totalParticipants').textContent = `${state.participants.length}명`;
+  document.getElementById('totalSettlements').textContent = `${compute().settlements.length}건`;
+  document.getElementById('navExpenseCount').textContent = state.expenses.length;
+  document.dispatchEvent(new Event('expensesupdated'));
 }
 
 // Initial render
